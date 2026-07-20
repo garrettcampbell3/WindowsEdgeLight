@@ -135,6 +135,61 @@
                     </Grid>
                 </Border>
 
+                <!-- Hover Hole Size -->
+                <Border
+                    Margin="0,0,0,12"
+                    Padding="16"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.ColumnSpan="2"
+                            FontWeight="SemiBold"
+                            Text="🕳️ Hover Hole Size" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,4,0,0"
+                            FontSize="12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            TextWrapping="Wrap"
+                            Text="How much of the screen is revealed under the cursor when hovering over the edge light." />
+                        <Slider
+                            x:Name="HoleSizeSlider"
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="0,8,12,0"
+                            Maximum="300"
+                            Minimum="80"
+                            SmallChange="5"
+                            LargeChange="20"
+                            TickFrequency="10"
+                            ValueChanged="HoleSizeSlider_ValueChanged"
+                            Thumb.DragCompleted="HoleSizeSlider_DragCompleted" />
+                        <TextBlock
+                            x:Name="HoleSizeValueText"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            MinWidth="44"
+                            TextAlignment="Right"
+                            VerticalAlignment="Center"
+                            Text="140px" />
+                    </Grid>
+                </Border>
+
                 <!-- Exclude from Capture -->
                 <Border
                     Margin="0,0,0,12"

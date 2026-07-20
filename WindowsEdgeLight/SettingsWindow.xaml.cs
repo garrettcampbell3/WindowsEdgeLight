@@ -21,8 +21,12 @@ public partial class SettingsWindow : Window
         ShowMonitorControlsCheckBox.IsChecked = mainWindow.GetIsControlMonitorsButtonVisible();
         ShowToggleCheckBox.IsChecked = mainWindow.GetIsToggleButtonVisible();
 
+        HoleSizeSlider.Value = mainWindow.GetHoverHoleSize();
+
         UpdateBrightnessLabel();
         UpdateColorTempLabel();
+
+        UpdateHoleSizeLabel();
 
         isInitializing = false;
     }
@@ -85,6 +89,7 @@ public partial class SettingsWindow : Window
     {
         mainWindow.SetBrightness(BrightnessSlider.Value, save: true);
         mainWindow.SetColorTemperature(ColorTempSlider.Value, save: true);
+        mainWindow.SetHoverHoleSize(HoleSizeSlider.Value, save: true);
     }
 
     private void ExcludeFromCapture_Click(object sender, RoutedEventArgs e)
@@ -97,6 +102,18 @@ public partial class SettingsWindow : Window
         }
     }
 
+    private void HoleSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (isInitializing) return;
+        mainWindow.SetHoverHoleSize(e.NewValue, save: false);
+        UpdateHoleSizeLabel();
+    }
+
+    private void HoleSizeSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        mainWindow.SetHoverHoleSize(HoleSizeSlider.Value, save: true);
+    }
+
     private void UpdateBrightnessLabel()
     {
         if (BrightnessValueText != null)
@@ -107,6 +124,12 @@ public partial class SettingsWindow : Window
     {
         if (ColorTempValueText != null)
             ColorTempValueText.Text = $"{(int)(ColorTempSlider.Value * 100)}%";
+    }
+
+    private void UpdateHoleSizeLabel()
+    {
+        if (HoleSizeValueText != null)
+            HoleSizeValueText.Text = $"{(int)HoleSizeSlider.Value}px";
     }
 
     private void ShowToggle_Click(object sender, RoutedEventArgs e)

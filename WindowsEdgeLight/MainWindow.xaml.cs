@@ -17,6 +17,8 @@ public partial class MainWindow : Window
     private const double OpacityStep = 0.15;
     private const double MinOpacity = 0.2;
     private const double MaxOpacity = 1.0;
+    private const double MinHoleSize = 80;   // matches frame band thickness so the hole spans the ring's full width
+    private const double MaxHoleSize = 300;
 	
 
     // Color temperature ("cool" blue-ish to "warm" amber-ish)
@@ -306,6 +308,9 @@ Version {version}";
         SetupWindow();
         CreateFrameGeometry();
         CreateControlWindow();
+
+        // Apply persisted hover hole size (resizes the ring and recomputes frame geometry)
+        SetHoverHoleSize(settings.HoverHoleSize, save: false);
         
         var hwnd = new WindowInteropHelper(this).Handle;
         int extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
@@ -510,8 +515,8 @@ Version {version}";
         var innerProximityRect = new Rect(
             frameInnerRect.X + holeRadius,
             frameInnerRect.Y + holeRadius,
-            frameInnerRect.Width - (holeRadius * 2),
-            frameInnerRect.Height - (holeRadius * 2));
+            Math.Max(0, frameInnerRect.Width - (holeRadius * 2)),
+            Math.Max(0, frameInnerRect.Height - (holeRadius * 2)));
 
         // Near from inside means inside innerRect but within holeRadius of its edge (i.e., not deep inside innerProximityRect)
         bool nearFromInside = frameInnerRect.Contains(windowPt) && !innerProximityRect.Contains(windowPt);
@@ -521,7 +526,7 @@ Version {version}";
         if (overFrame)
         {
             positionRing(hoverRing, windowPt.X - ringDiameter / 2, windowPt.Y - ringDiameter / 2);
-            
+
             if (hoverRing.Visibility != Visibility.Visible)
             {
                 hoverRing.Visibility = Visibility.Visible;
@@ -594,7 +599,7 @@ Version {version}";
         double ringDiameter = hoverCursorRing?.Width ?? 0;
         double holeRadius = ringDiameter / 2.0;
         frameOuterRect = new Rect(pathOffsetX - holeRadius, pathOffsetY - holeRadius, width + holeRadius * 2, height + holeRadius * 2);
-        frameInnerRect = new Rect(pathOffsetX + frameThickness + holeRadius, pathOffsetY + frameThickness + holeRadius, width - (frameThickness * 2) - holeRadius * 2, height - (frameThickness * 2) - holeRadius * 2);
+        frameInnerRect = new Rect(pathOffsetX + frameThickness + holeRadius, pathOffsetY + frameThickness + holeRadius, Math.Max(0, width - (frameThickness * 2) - holeRadius * 2), Math.Max(0, height - (frameThickness * 2) - holeRadius * 2));
     }
 
     private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -1104,11 +1109,12 @@ Version {version}";
             Color = System.Windows.Media.Color.FromRgb(255, 255, 255)
         };
 
-        // Create hover ring (Ellipse)
+        // Create hover ring (Ellipse) sized to the persisted hole size
+        double holeSize = Math.Max(MinHoleSize, Math.Min(MaxHoleSize, settings.HoverHoleSize));
         var hoverRing = new Ellipse
         {
-            Width = 140,
-            Height = 140,
+            Width = holeSize,
+            Height = holeSize,
             Fill = System.Windows.Media.Brushes.Transparent,
             Visibility = Visibility.Collapsed,
             HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
@@ -1146,7 +1152,7 @@ Version {version}";
         double ringDiameter = hoverRing.Width;
         double holeRadius = ringDiameter / 2.0;
         var frameOuterRect = new Rect(pathOffsetX - holeRadius, pathOffsetY - holeRadius, width + holeRadius * 2, height + holeRadius * 2);
-        var frameInnerRect = new Rect(pathOffsetX + frameThickness + holeRadius, pathOffsetY + frameThickness + holeRadius, width - (frameThickness * 2) - holeRadius * 2, height - (frameThickness * 2) - holeRadius * 2);
+        var frameInnerRect = new Rect(pathOffsetX + frameThickness + holeRadius, pathOffsetY + frameThickness + holeRadius, Math.Max(0, width - (frameThickness * 2) - holeRadius * 2), Math.Max(0, height - (frameThickness * 2) - holeRadius * 2));
 
         var ctx = new MonitorWindowContext
         {
@@ -1246,7 +1252,7 @@ Version {version}";
         double holeRadius = ringDiameter / 2.0;
         
         ctx.FrameOuterRect = new Rect(ctx.PathOffsetX - holeRadius, ctx.PathOffsetY - holeRadius, width + holeRadius * 2, height + holeRadius * 2);
-        ctx.FrameInnerRect = new Rect(ctx.PathOffsetX + frameThickness + holeRadius, ctx.PathOffsetY + frameThickness + holeRadius, width - (frameThickness * 2) - holeRadius * 2, height - (frameThickness * 2) - holeRadius * 2);
+        ctx.FrameInnerRect = new Rect(ctx.PathOffsetX + frameThickness + holeRadius, ctx.PathOffsetY + frameThickness + holeRadius, Math.Max(0, width - (frameThickness * 2) - holeRadius * 2), Math.Max(0, height - (frameThickness * 2) - holeRadius * 2));
     }
 
     public bool IsShowingOnAllMonitors()
@@ -1278,6 +1284,37 @@ Version {version}";
     public double GetBrightness() => currentOpacity;
 
     public double GetColorTemperature() => _colorTemperature;
+
+    public double GetHoverHoleSize() => hoverCursorRing?.Width ?? settings.HoverHoleSize;
+
+    public void SetHoverHoleSize(double diameter, bool save = true)
+    {
+        double clamped = Math.Max(MinHoleSize, Math.Min(MaxHoleSize, diameter));
+
+        // Resize the hover ring on every window, then recompute geometry so the punched hole
+        // and the hover-detection bands (which are derived from the hole radius) stay in sync.
+        if (hoverCursorRing != null)
+        {
+            hoverCursorRing.Width = clamped;
+            hoverCursorRing.Height = clamped;
+            hoverCursorRing.Visibility = Visibility.Collapsed;
+        }
+        CreateFrameGeometry();
+
+        foreach (var ctx in additionalMonitorWindows)
+        {
+            ctx.HoverRing.Width = clamped;
+            ctx.HoverRing.Height = clamped;
+            ctx.HoverRing.Visibility = Visibility.Collapsed;
+            UpdateMonitorGeometry(ctx);
+        }
+
+        if (save)
+        {
+            settings.HoverHoleSize = clamped;
+            settings.Save();
+        }
+    }
 
     public bool GetIsToggleButtonVisible() => settings.ShowToggleButton;
 

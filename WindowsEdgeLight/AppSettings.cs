@@ -26,6 +26,13 @@ public class AppSettings
     public bool IsLightOn { get; set; } = true;
 
     /// <summary>
+    /// Diameter (in device-independent pixels) of the transparent spotlight hole
+    /// punched under the cursor when hovering over the edge light. Larger values reveal
+    /// more of the screen behind the light. Clamped to [60, 300] when applied.
+    /// </summary>
+    public double HoverHoleSize { get; set; } = 140;
+
+    /// <summary>
     /// Brightness/opacity of the edge light, in the range [0.2, 1.0]
     /// </summary>
     public double Brightness { get; set; } = 1.0;

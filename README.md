@@ -9,6 +9,7 @@ A lightweight WPF application that adds a customizable glowing edge light effect
 - **DPI Aware**: Properly handles high-DPI displays (4K monitors with scaling)
 - **Fluent Design**: Modern UX that fits in with the Windows look and feel
 - **Click-Through Transparency**: Overlay doesn't interfere with your work - all clicks pass through to applications beneath
+- **Adjustable Hover Reveal**: A spotlight hole follows your cursor over the edge light; the hole size is customizable to reveal as much or as little as you like
 - **Customizable Brightness**: Adjust opacity with easy-to-use controls
  - **Adjustable Color Temperature**: Shift the edge light from cooler (blue-ish) to warmer (amber) tones
 - **Toggle On/Off**: Quickly enable or disable the edge light effect
@@ -90,6 +91,17 @@ The executable will be in `bin\Release\net10.0-windows\win-x64\publish\WindowsEd
    - 🎥 **Exclude from Capture** - Hide from screen sharing and screenshots
    - ✖ **Exit** - Close the application
 4. Hide the control toolbar for a cleaner look using the tray menu (right-click tray icon → "Hide Controls")
+
+### Hover Reveal
+
+When your cursor moves over the edge light, a circular "spotlight" hole is punched in the
+light directly under the pointer, letting you see (and reach) what's behind it. You can
+customize how large this hole is from the Settings window:
+
+- Open **Settings** and drag the **🕳️ Hover Hole Size** slider (80–300px, default 140px).
+- Smaller values reveal just a small area under the cursor; larger values reveal more.
+
+Your choice is saved and restored across restarts.
 
 ### Screen Sharing Mode
 
